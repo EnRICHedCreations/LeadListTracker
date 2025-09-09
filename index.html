@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead List Tracker - Stay Ahead of Competition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #2d3748;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e3c72;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 60, 114, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #dd6b20, #c05621);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #1e3c72;
+            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+        }
+
+        .county-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .county-item {
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .county-item:hover {
+            background: #f7fafc;
+            border-color: #1e3c72;
+        }
+
+        .county-item.active {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            border-color: #1e3c72;
+        }
+
+        .county-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .county-stats {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .data-sources {
+            display: grid;
+            gap: 20px;
+        }
+
+        .source-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .source-card.overdue {
+            border-color: #e53e3e;
+            background: #fed7d7;
+        }
+
+        .source-card.due-soon {
+            border-color: #dd6b20;
+            background: #feebc8;
+        }
+
+        .source-card.current {
+            border-color: #38a169;
+            background: #c6f6d5;
+        }
+
+        .source-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .source-type {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .source-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-overdue {
+            background: #e53e3e;
+            color: white;
+        }
+
+        .status-due-soon {
+            background: #dd6b20;
+            color: white;
+        }
+
+        .status-current {
+            background: #38a169;
+            color: white;
+        }
+
+        .source-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .source-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .close {
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: #718096;
+        }
+
+        .close:hover {
+            color: #2d3748;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #276749;
+            border: 1px solid #9ae6b4;
+        }
+
+        .alert-danger {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #feb2b2;
+        }
+
+        .alert-warning {
+            background: #feebc8;
+            color: #744210;
+            border: 1px solid #f6d55c;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-bar {
+                grid-template-columns: 1fr;
+            }
+            
+            .source-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .source-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 Lead List Tracker</h1>
+            <p>Stay ahead of the competition - Be first to pull fresh government data</p>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCounties">0</div>
+                <div class="stat-label">Counties Tracked</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="overdueCount">0</div>
+                <div class="stat-label">Overdue Lists</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="dueSoonCount">0</div>
+                <div class="stat-label">Due This Week</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalSources">0</div>
+                <div class="stat-label">Data Sources</div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3>Counties</h3>
+                    <button class="btn" onclick="openAddCountyModal()">+ Add County</button>
+                </div>
+                
+                <div class="county-list" id="countyList">
+                    <!-- Counties will be loaded here -->
+                </div>
+                
+                <button class="btn btn-secondary" onclick="exportData()" style="width: 100%; margin-top: 15px;">
+                    📊 Export Data
+                </button>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <div id="welcomeMessage">
+                    <h2>Welcome to Lead List Tracker</h2>
+                    <p style="margin: 20px 0; color: #718096; font-size: 1.1rem;">
+                        Get started by adding your first county and data sources. This system will help you:
+                    </p>
+                    <ul style="color: #718096; margin-left: 20px; line-height: 2;">
+                        <li>Track when you last pulled government lists</li>
+                        <li>Get alerts when lists need refreshing</li>
+                        <li>Stay ahead of other wholesalers</li>
+                        <li>Organize all your markets in one place</li>
+                    </ul>
+                </div>
+
+                <div id="countyDetails" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h2 id="countyTitle">County Details</h2>
+                        <div>
+                            <button class="btn btn-secondary" onclick="editCounty()">✏️ Edit</button>
+                            <button class="btn" onclick="openAddSourceModal()">+ Add Source</button>
+                        </div>
+                    </div>
+
+                    <div id="dataSources">
+                        <!-- Data sources will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add County Modal -->
+    <div id="addCountyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New County</h3>
+                <span class="close" onclick="closeModal('addCountyModal')">&times;</span>
+            </div>
+            
+            <form id="addCountyForm" onsubmit="addCounty(event)">
+                <div class="form-group">
+                    <label for="countyName">County Name</label>
+                    <input type="text" id="countyName" required placeholder="e.g., Alamance County">
+                </div>
+                
+                <div class="form-group">
+                    <label for="countyState">State</label>
+                    <input type="text" id="countyState" required placeholder="e.g., North Carolina">
+                </div>
+                
+                <div class="form-group">
+                    <label for="countyPopulation">Population</label>
+                    <input type="number" id="countyPopulation" placeholder="Optional">
+                </div>
+                
+                <div class="form-group">
+                    <label for="countyNotes">Notes</label>
+                    <textarea id="countyNotes" rows="3" placeholder="Market notes, best areas, etc."></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addCountyModal')">Cancel</button>
+                    <button type="submit" class="btn">Add County</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Source Modal -->
+    <div id="addSourceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Data Source</h3>
+                <span class="close" onclick="closeModal('addSourceModal')">&times;</span>
+            </div>
+            
+            <form id="addSourceForm" onsubmit="addDataSource(event)">
+                <div class="form-group">
+                    <label for="sourceType">Source Type</label>
+                    <select id="sourceType" required>
+                        <option value="">Select source type</option>
+                        <option value="tax">Tax Delinquent</option>
+                        <option value="code">Code Violations</option>
+                        <option value="fire">Fire Department</option>
+                        <option value="water">Water Shutoffs</option>
+                        <option value="probate">Probate</option>
+                        <option value="foreclosure">Foreclosure</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="sourceUrl">Website URL</label>
+                    <input type="url" id="sourceUrl" required placeholder="https://example.com/records">
+                </div>
+                
+                <div class="form-group">
+                    <label for="sourceName">Source Name/Description</label>
+                    <input type="text" id="sourceName" placeholder="e.g., County Clerk Tax Records">
+                </div>
+                
+                <div class="form-group">
+                    <label for="pullFrequency">Pull Frequency</label>
+                    <select id="pullFrequency" required>
+                        <option value="7">Weekly (7 days)</option>
+                        <option value="14">Bi-weekly (14 days)</option>
+                        <option value="30">Monthly (30 days)</option>
+                        <option value="1">Daily</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lastPulled">Last Pulled Date</label>
+                    <input type="date" id="lastPulled">
+                </div>
+                
+                <div class="form-group">
+                    <label for="sourceNotes">Notes</label>
+                    <textarea id="sourceNotes" rows="3" placeholder="Access instructions, login info, etc."></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addSourceModal')">Cancel</button>
+                    <button type="submit" class="btn">Add Source</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCR05CPjBhD3OEwg8fKlqW8BlCJM8DWBu4",
+            authDomain: "leadlisttracker.firebaseapp.com",
+            projectId: "leadlisttracker",
+            storageBucket: "leadlisttracker.firebasestorage.app",
+            messagingSenderId: "537989181623",
+            appId: "1:537989181623:web:abc5c5222c2a19e9179d32",
+            measurementId: "G-JVK97ND3M3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Make Firebase available globally
+        window.db = db;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.getDocs = getDocs;
+        window.updateDoc = updateDoc;
+        window.deleteDoc = deleteDoc;
+        window.doc = doc;
+        window.onSnapshot = onSnapshot;
+        window.serverTimestamp = serverTimestamp;
+        
+        console.log('🔥 Firebase initialized for Lead List Tracker');
+    </script>
+
+    <script>
+        // Data storage
+        let counties = [];
+        let dataSources = [];
+        let currentCountyId = null;
+        let isOnline = true;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFirebase();
+        });
+
+        // Firebase integration
+        async function initializeFirebase() {
+            try {
+                // Load data from Firebase
+                await loadDataFromFirebase();
+                
+                // Set up real-time listeners
+                setupRealtimeListeners();
+                
+                updateStats();
+                checkOverdueAlerts();
+                showAlert('✅ Connected to cloud - your data syncs everywhere!', 'success');
+            } catch (error) {
+                console.error('Firebase connection failed, using offline mode:', error);
+                // Fallback to localStorage
+                loadDataFromLocalStorage();
+                isOnline = false;
+                showAlert('📱 Working offline - data will sync when online', 'warning');
+            }
+        }
+
+        async function loadDataFromFirebase() {
+            // Load counties
+            const countiesSnapshot = await window.getDocs(window.collection(window.db, 'counties'));
+            counties = [];
+            countiesSnapshot.forEach((doc) => {
+                counties.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+            });
+
+            // Load data sources
+            const sourcesSnapshot = await window.getDocs(window.collection(window.db, 'dataSources'));
+            dataSources = [];
+            sourcesSnapshot.forEach((doc) => {
+                dataSources.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+            });
+
+            loadCounties();
+        }
+
+        function loadDataFromLocalStorage() {
+            counties = JSON.parse(localStorage.getItem('leadTracker_counties') || '[]');
+            dataSources = JSON.parse(localStorage.getItem('leadTracker_sources') || '[]');
+            loadCounties();
+        }
+
+        function setupRealtimeListeners() {
+            // Listen for county changes
+            window.onSnapshot(window.collection(window.db, 'counties'), (snapshot) => {
+                counties = [];
+                snapshot.forEach((doc) => {
+                    counties.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                loadCounties();
+                updateStats();
+            });
+
+            // Listen for data source changes
+            window.onSnapshot(window.collection(window.db, 'dataSources'), (snapshot) => {
+                dataSources = [];
+                snapshot.forEach((doc) => {
+                    dataSources.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                if (currentCountyId) {
+                    loadDataSources(currentCountyId);
+                }
+                updateStats();
+                checkOverdueAlerts();
+            });
+        }
+
+        // County management
+        async function addCounty(event) {
+            event.preventDefault();
+            
+            const countyData = {
+                name: document.getElementById('countyName').value,
+                state: document.getElementById('countyState').value,
+                population: document.getElementById('countyPopulation').value || null,
+                notes: document.getElementById('countyNotes').value,
+                createdAt: window.serverTimestamp()
+            };
+            
+            try {
+                if (isOnline) {
+                    await window.addDoc(window.collection(window.db, 'counties'), countyData);
+                    showAlert('County added and synced to cloud!', 'success');
+                } else {
+                    // Offline mode - add to local array
+                    const county = {
+                        id: Date.now().toString(),
+                        ...countyData,
+                        createdAt: new Date().toISOString()
+                    };
+                    counties.push(county);
+                    saveDataLocally();
+                    loadCounties();
+                    updateStats();
+                    showAlert('County added offline - will sync when online', 'warning');
+                }
+                
+                closeModal('addCountyModal');
+                document.getElementById('addCountyForm').reset();
+            } catch (error) {
+                console.error('Error adding county:', error);
+                showAlert('Error adding county. Please try again.', 'danger');
+            }
+        }
+
+        function loadCounties() {
+            const countyList = document.getElementById('countyList');
+            
+            if (counties.length === 0) {
+                countyList.innerHTML = '<div style="text-align: center; color: #718096; padding: 20px;">No counties added yet</div>';
+                return;
+            }
+            
+            countyList.innerHTML = counties.map(county => {
+                const sources = dataSources.filter(s => s.countyId === county.id);
+                const overdue = sources.filter(s => isOverdue(s)).length;
+                const dueSoon = sources.filter(s => isDueSoon(s)).length;
+                
+                return `
+                    <div class="county-item ${currentCountyId === county.id ? 'active' : ''}" 
+                         onclick="selectCounty('${county.id}')">
+                        <div class="county-name">${county.name}, ${county.state}</div>
+                        <div class="county-stats">
+                            ${sources.length} sources • 
+                            ${overdue > 0 ? `${overdue} overdue` : ''}
+                            ${dueSoon > 0 ? `${dueSoon} due soon` : ''}
+                            ${overdue === 0 && dueSoon === 0 ? 'All current' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectCounty(countyId) {
+            currentCountyId = countyId;
+            const county = counties.find(c => c.id === countyId);
+            
+            if (!county) return;
+            
+            document.getElementById('welcomeMessage').style.display = 'none';
+            document.getElementById('countyDetails').style.display = 'block';
+            document.getElementById('countyTitle').textContent = `${county.name}, ${county.state}`;
+            
+            loadDataSources(countyId);
+            loadCounties(); // Refresh to show active state
+        }
+
+        // Data source management
+        async function addDataSource(event) {
+            event.preventDefault();
+            
+            if (!currentCountyId) {
+                showAlert('Please select a county first', 'danger');
+                return;
+            }
+            
+            const sourceData = {
+                countyId: currentCountyId,
+                type: document.getElementById('sourceType').value,
+                url: document.getElementById('sourceUrl').value,
+                name: document.getElementById('sourceName').value,
+                frequency: parseInt(document.getElementById('pullFrequency').value),
+                lastPulled: document.getElementById('lastPulled').value || null,
+                notes: document.getElementById('sourceNotes').value,
+                createdAt: window.serverTimestamp()
+            };
+            
+            try {
+                if (isOnline) {
+                    await window.addDoc(window.collection(window.db, 'dataSources'), sourceData);
+                    showAlert('Data source added and synced!', 'success');
+                } else {
+                    // Offline mode
+                    const source = {
+                        id: Date.now().toString(),
+                        ...sourceData,
+                        createdAt: new Date().toISOString()
+                    };
+                    dataSources.push(source);
+                    saveDataLocally();
+                    loadDataSources(currentCountyId);
+                    updateStats();
+                    loadCounties();
+                    showAlert('Source added offline - will sync when online', 'warning');
+                }
+                
+                closeModal('addSourceModal');
+                document.getElementById('addSourceForm').reset();
+            } catch (error) {
+                console.error('Error adding data source:', error);
+                showAlert('Error adding data source. Please try again.', 'danger');
+            }
+        }
+
+        function loadDataSources(countyId) {
+            const sourcesContainer = document.getElementById('dataSources');
+            const sources = dataSources.filter(s => s.countyId === countyId);
+            
+            if (sources.length === 0) {
+                sourcesContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #718096;">
+                        <h3>No data sources yet</h3>
+                        <p>Add your first data source to start tracking leads</p>
+                        <button class="btn" onclick="openAddSourceModal()" style="margin-top: 15px;">Add Data Source</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            sourcesContainer.innerHTML = sources.map(source => {
+                const status = getSourceStatus(source);
+                const daysSinceLastPull = source.lastPulled ? 
+                    Math.floor((new Date() - new Date(source.lastPulled)) / (1000 * 60 * 60 * 24)) : 'Never';
+                const nextDue = getNextDueDate(source);
+                
+                return `
+                    <div class="source-card ${status.class}">
+                        <div class="source-header">
+                            <div class="source-type">${getSourceIcon(source.type)} ${formatSourceType(source.type)}</div>
+                            <div class="source-status ${status.statusClass}">${status.text}</div>
+                        </div>
+                        
+                        <div class="source-details">
+                            <div>
+                                <strong>Last Pulled:</strong><br>
+                                ${source.lastPulled ? new Date(source.lastPulled).toLocaleDateString() : 'Never'}
+                                ${daysSinceLastPull !== 'Never' ? `(${daysSinceLastPull} days ago)` : ''}
+                            </div>
+                            <div>
+                                <strong>Next Due:</strong><br>
+                                ${nextDue}
+                            </div>
+                        </div>
+                        
+                        ${source.name ? `<div style="margin-bottom: 10px;"><strong>Name:</strong> ${source.name}</div>` : ''}
+                        ${source.notes ? `<div style="margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 5px;"><strong>Notes:</strong> ${source.notes}</div>` : ''}
+                        
+                        <div class="source-actions">
+                            <button class="btn" onclick="markAsPulled('${source.id}')">✅ Mark as Pulled</button>
+                            <button class="btn btn-secondary" onclick="openUrl('${source.url}')">🔗 Open Site</button>
+                            <button class="btn btn-secondary" onclick="editSource('${source.id}')">✏️ Edit</button>
+                            <button class="btn btn-danger" onclick="deleteSource('${source.id}')">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Utility functions
+        function getSourceStatus(source) {
+            if (!source.lastPulled) {
+                return { class: 'overdue', statusClass: 'status-overdue', text: 'Never Pulled' };
+            }
+            
+            const daysSince = Math.floor((new Date() - new Date(source.lastPulled)) / (1000 * 60 * 60 * 24));
+            
+            if (daysSince >= source.frequency) {
+                return { class: 'overdue', statusClass: 'status-overdue', text: 'Overdue' };
+            } else if (daysSince >= source.frequency - 2) {
+                return { class: 'due-soon', statusClass: 'status-due-soon', text: 'Due Soon' };
+            } else {
+                return { class: 'current', statusClass: 'status-current', text: 'Current' };
+            }
+        }
+
+        function isOverdue(source) {
+            if (!source.lastPulled) return true;
+            const daysSince = Math.floor((new Date() - new Date(source.lastPulled)) / (1000 * 60 * 60 * 24));
+            return daysSince >= source.frequency;
+        }
+
+        function isDueSoon(source) {
+            if (!source.lastPulled) return false;
+            const daysSince = Math.floor((new Date() - new Date(source.lastPulled)) / (1000 * 60 * 60 * 24));
+            return daysSince >= source.frequency - 2 && daysSince < source.frequency;
+        }
+
+        function getNextDueDate(source) {
+            if (!source.lastPulled) return 'Now';
+            
+            const lastPull = new Date(source.lastPulled);
+            const nextDue = new Date(lastPull.getTime() + (source.frequency * 24 * 60 * 60 * 1000));
+            
+            if (nextDue <= new Date()) return 'Now';
+            
+            return nextDue.toLocaleDateString();
+        }
+
+        function getSourceIcon(type) {
+            const icons = {
+                tax: '🏠',
+                code: '⚠️',
+                fire: '🔥',
+                water: '💧',
+                probate: '⚖️',
+                foreclosure: '🏦',
+                other: '📋'
+            };
+            return icons[type] || '📋';
+        }
+
+        function formatSourceType(type) {
+            const types = {
+                tax: 'Tax Delinquent',
+                code: 'Code Violations',
+                fire: 'Fire Department',
+                water: 'Water Shutoffs',
+                probate: 'Probate',
+                foreclosure: 'Foreclosure',
+                other: 'Other'
+            };
+            return types[type] || type;
+        }
+
+        // Actions
+        async function markAsPulled(sourceId) {
+            try {
+                if (isOnline) {
+                    const sourceRef = window.doc(window.db, 'dataSources', sourceId);
+                    await window.updateDoc(sourceRef, {
+                        lastPulled: new Date().toISOString().split('T')[0]
+                    });
+                    showAlert('✅ Marked as pulled and synced!', 'success');
+                } else {
+                    // Offline mode
+                    const source = dataSources.find(s => s.id === sourceId);
+                    if (source) {
+                        source.lastPulled = new Date().toISOString().split('T')[0];
+                        saveDataLocally();
+                        loadDataSources(currentCountyId);
+                        updateStats();
+                        loadCounties();
+                        showAlert('Marked as pulled offline - will sync when online', 'warning');
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating source:', error);
+                showAlert('Error updating. Please try again.', 'danger');
+            }
+        }
+
+        function openUrl(url) {
+            window.open(url, '_blank');
+        }
+
+        async function deleteSource(sourceId) {
+            if (confirm('Are you sure you want to delete this data source?')) {
+                try {
+                    if (isOnline) {
+                        await window.deleteDoc(window.doc(window.db, 'dataSources', sourceId));
+                        showAlert('Data source deleted and synced!', 'success');
+                    } else {
+                        // Offline mode
+                        dataSources = dataSources.filter(s => s.id !== sourceId);
+                        saveDataLocally();
+                        loadDataSources(currentCountyId);
+                        updateStats();
+                        loadCounties();
+                        showAlert('Source deleted offline - will sync when online', 'warning');
+                    }
+                } catch (error) {
+                    console.error('Error deleting source:', error);
+                    showAlert('Error deleting. Please try again.', 'danger');
+                }
+            }
+        }
+
+        // Stats and alerts
+        function updateStats() {
+            document.getElementById('totalCounties').textContent = counties.length;
+            document.getElementById('totalSources').textContent = dataSources.length;
+            
+            const overdue = dataSources.filter(isOverdue).length;
+            const dueSoon = dataSources.filter(isDueSoon).length;
+            
+            document.getElementById('overdueCount').textContent = overdue;
+            document.getElementById('dueSoonCount').textContent = dueSoon;
+        }
+
+        function checkOverdueAlerts() {
+            const overdue = dataSources.filter(isOverdue);
+            const dueSoon = dataSources.filter(isDueSoon);
+            
+            if (overdue.length > 0) {
+                showAlert(`⚠️ You have ${overdue.length} overdue list(s) that need to be pulled!`, 'warning');
+            } else if (dueSoon.length > 0) {
+                showAlert(`⏰ You have ${dueSoon.length} list(s) due soon`, 'warning');
+            }
+        }
+
+        // Modal functions
+        function openAddCountyModal() {
+            document.getElementById('addCountyModal').style.display = 'block';
+        }
+
+        function openAddSourceModal() {
+            if (!currentCountyId) {
+                showAlert('Please select a county first', 'danger');
+                return;
+            }
+            document.getElementById('addSourceModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Data persistence
+        function saveDataLocally() {
+            localStorage.setItem('leadTracker_counties', JSON.stringify(counties));
+            localStorage.setItem('leadTracker_sources', JSON.stringify(dataSources));
+        }
+
+        // Placeholder functions for missing implementations
+        function editCounty() {
+            showAlert('County editing feature coming soon!', 'warning');
+        }
+
+        function editSource(sourceId) {
+            showAlert('Source editing feature coming soon!', 'warning');
+        }
+
+        // Alerts
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '20px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '10000';
+            alertDiv.style.maxWidth = '400px';
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 4000);
+        }
+
+        // Export data
+        function exportData() {
+            const data = {
+                counties: counties,
+                dataSources: dataSources,
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `lead_tracker_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
