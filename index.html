@@ -632,6 +632,69 @@
         </div>
     </div>
 
+    <!-- Edit Source Modal -->
+    <div id="editSourceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Data Source</h3>
+                <span class="close" onclick="closeModal('editSourceModal')">&times;</span>
+            </div>
+            
+            <form id="editSourceForm" onsubmit="updateDataSource(event)">
+                <input type="hidden" id="editSourceId">
+                
+                <div class="form-group">
+                    <label for="editSourceType">Source Type</label>
+                    <select id="editSourceType" required>
+                        <option value="">Select source type</option>
+                        <option value="tax">Tax Delinquent</option>
+                        <option value="code">Code Violations</option>
+                        <option value="fire">Fire Department</option>
+                        <option value="water">Water Shutoffs</option>
+                        <option value="probate">Probate</option>
+                        <option value="foreclosure">Foreclosure</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editSourceUrl">Website URL</label>
+                    <input type="url" id="editSourceUrl" required placeholder="https://example.com/records">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editSourceName">Source Name/Description</label>
+                    <input type="text" id="editSourceName" placeholder="e.g., County Clerk Tax Records">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editPullFrequency">Pull Frequency</label>
+                    <select id="editPullFrequency" required>
+                        <option value="7">Weekly (7 days)</option>
+                        <option value="14">Bi-weekly (14 days)</option>
+                        <option value="30">Monthly (30 days)</option>
+                        <option value="1">Daily</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editLastPulled">Last Pulled Date</label>
+                    <input type="date" id="editLastPulled">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editSourceNotes">Notes</label>
+                    <textarea id="editSourceNotes" rows="3" placeholder="Access instructions, login info, etc."></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editSourceModal')">Cancel</button>
+                    <button type="submit" class="btn">Update Source</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Firebase Integration -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
@@ -991,6 +1054,53 @@
             }
         }
 
+        // Update data source
+        async function updateDataSource(event) {
+            event.preventDefault();
+            
+            const sourceId = document.getElementById('editSourceId').value;
+            if (!sourceId) {
+                showAlert('Source ID not found!', 'danger');
+                return;
+            }
+            
+            const sourceData = {
+                type: document.getElementById('editSourceType').value,
+                url: document.getElementById('editSourceUrl').value,
+                name: document.getElementById('editSourceName').value,
+                frequency: parseInt(document.getElementById('editPullFrequency').value),
+                lastPulled: document.getElementById('editLastPulled').value || null,
+                notes: document.getElementById('editSourceNotes').value,
+                updatedAt: window.serverTimestamp()
+            };
+            
+            try {
+                if (isOnline) {
+                    const sourceRef = window.doc(window.db, 'dataSources', sourceId);
+                    await window.updateDoc(sourceRef, sourceData);
+                    showAlert('✅ Data source updated and synced!', 'success');
+                } else {
+                    // Offline mode
+                    const source = dataSources.find(s => s.id === sourceId);
+                    if (source) {
+                        Object.assign(source, sourceData);
+                        source.updatedAt = new Date().toISOString();
+                        saveDataLocally();
+                        loadDataSources(currentCountyId);
+                        updateStats();
+                        loadCounties();
+                        showAlert('Source updated offline - will sync when online', 'warning');
+                    }
+                }
+                
+                closeModal('editSourceModal');
+                document.getElementById('editSourceForm').reset();
+            } catch (error) {
+                console.error('Error updating data source:', error);
+                showAlert('Error updating data source. Please try again.', 'danger');
+            }
+        }
+
         function loadDataSources(countyId) {
             const sourcesContainer = document.getElementById('dataSources');
             const sources = dataSources.filter(s => s.countyId === countyId);
@@ -1281,7 +1391,23 @@
         }
 
         function editSource(sourceId) {
-            showAlert('Source editing feature coming soon!', 'warning');
+            const source = dataSources.find(s => s.id === sourceId);
+            if (!source) {
+                showAlert('Source not found!', 'danger');
+                return;
+            }
+            
+            // Populate the edit form with current source data
+            document.getElementById('editSourceId').value = sourceId;
+            document.getElementById('editSourceType').value = source.type;
+            document.getElementById('editSourceUrl').value = source.url;
+            document.getElementById('editSourceName').value = source.name || '';
+            document.getElementById('editPullFrequency').value = source.frequency;
+            document.getElementById('editLastPulled').value = source.lastPulled || '';
+            document.getElementById('editSourceNotes').value = source.notes || '';
+            
+            // Show the modal
+            document.getElementById('editSourceModal').style.display = 'block';
         }
 
         // File upload functionality
