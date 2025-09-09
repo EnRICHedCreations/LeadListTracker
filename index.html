@@ -263,9 +263,30 @@
 
         .source-details {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 15px;
             margin-bottom: 15px;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .file-badge {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .file-badge.has-file {
+            background: #c6f6d5;
+            color: #276749;
         }
 
         .source-actions {
@@ -554,6 +575,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyCR05CPjBhD3OEwg8fKlqW8BlCJM8DWBu4",
@@ -567,9 +589,11 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
         // Make Firebase available globally
         window.db = db;
+        window.storage = storage;
         window.collection = collection;
         window.addDoc = addDoc;
         window.getDocs = getDocs;
@@ -578,6 +602,10 @@
         window.doc = doc;
         window.onSnapshot = onSnapshot;
         window.serverTimestamp = serverTimestamp;
+        window.storageRef = ref;
+        window.uploadBytes = uploadBytes;
+        window.getDownloadURL = getDownloadURL;
+        window.deleteObject = deleteObject;
         
         console.log('🔥 Firebase initialized for Lead List Tracker');
     </script>
@@ -841,6 +869,22 @@
                                 <strong>Next Due:</strong><br>
                                 ${nextDue}
                             </div>
+                            <div>
+                                <strong>Latest List:</strong><br>
+                                ${source.fileName ? 
+                                    `<div class="file-info">
+                                        ${getFileIcon(source.fileName)} ${source.fileName.length > 20 ? source.fileName.substring(0, 20) + '...' : source.fileName}
+                                        <span class="file-badge has-file">Stored</span>
+                                    </div>
+                                    <small>Uploaded: ${new Date(source.fileUploadDate).toLocaleDateString()}</small>
+                                    ${source.fileSize ? `<br><small>Size: ${formatFileSize(source.fileSize)}</small>` : ''}` 
+                                    : 
+                                    `<div class="file-info">
+                                        No file uploaded
+                                        <span class="file-badge">Empty</span>
+                                    </div>`
+                                }
+                            </div>
                         </div>
                         
                         ${source.name ? `<div style="margin-bottom: 10px;"><strong>Name:</strong> ${source.name}</div>` : ''}
@@ -849,6 +893,11 @@
                         <div class="source-actions">
                             <button class="btn" onclick="markAsPulled('${source.id}')">✅ Mark as Pulled</button>
                             <button class="btn btn-secondary" onclick="openUrl('${source.url}')">🔗 Open Site</button>
+                            <div style="position: relative; display: inline-block;">
+                                <button class="btn" onclick="document.getElementById('upload_${source.id}').click()">📤 Upload List</button>
+                                <input type="file" id="upload_${source.id}" accept=".csv,.xlsx,.xls,.pdf" style="display: none;" onchange="uploadFile('${source.id}', this)">
+                            </div>
+                            ${source.fileUrl ? `<button class="btn btn-secondary" onclick="downloadFile('${source.fileUrl}', '${source.fileName}')">📥 Download List</button>` : ''}
                             <button class="btn btn-secondary" onclick="editSource('${source.id}')">✏️ Edit</button>
                             <button class="btn btn-danger" onclick="deleteSource('${source.id}')">🗑️ Delete</button>
                         </div>
@@ -921,6 +970,25 @@
                 other: 'Other'
             };
             return types[type] || type;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function getFileIcon(fileName) {
+            const extension = fileName.split('.').pop().toLowerCase();
+            const icons = {
+                'csv': '📊',
+                'xlsx': '📈',
+                'xls': '📈',
+                'pdf': '📕'
+            };
+            return icons[extension] || '📄';
         }
 
         // Actions
@@ -1029,6 +1097,97 @@
 
         function editSource(sourceId) {
             showAlert('Source editing feature coming soon!', 'warning');
+        }
+
+        // File upload functionality
+        async function uploadFile(sourceId, inputElement) {
+            const file = inputElement.files[0];
+            if (!file) return;
+
+            // Validate file type
+            const allowedTypes = ['.csv', '.xlsx', '.xls', '.pdf'];
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            if (!allowedTypes.includes(fileExtension)) {
+                showAlert('Please upload a CSV, Excel, or PDF file only', 'danger');
+                return;
+            }
+
+            // Validate file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showAlert('File too large. Maximum size is 10MB', 'danger');
+                return;
+            }
+
+            try {
+                showAlert('Uploading file...', 'warning');
+                
+                if (isOnline) {
+                    // Get source details for file naming
+                    const source = dataSources.find(s => s.id === sourceId);
+                    const county = counties.find(c => c.id === source.countyId);
+                    
+                    // Create unique file path
+                    const timestamp = new Date().toISOString().split('T')[0];
+                    const fileName = `${county.name}_${source.type}_${timestamp}_${file.name}`;
+                    const filePath = `lists/${sourceId}/${fileName}`;
+                    
+                    // Delete old file if exists
+                    if (source.fileUrl) {
+                        try {
+                            const oldFileRef = window.storageRef(window.storage, source.filePath);
+                            await window.deleteObject(oldFileRef);
+                        } catch (error) {
+                            console.log('Old file not found or already deleted');
+                        }
+                    }
+                    
+                    // Upload new file
+                    const fileRef = window.storageRef(window.storage, filePath);
+                    const snapshot = await window.uploadBytes(fileRef, file);
+                    const downloadURL = await window.getDownloadURL(snapshot.ref);
+                    
+                    // Update source record with file info
+                    const sourceRef = window.doc(window.db, 'dataSources', sourceId);
+                    await window.updateDoc(sourceRef, {
+                        fileName: file.name,
+                        fileUrl: downloadURL,
+                        filePath: filePath,
+                        fileSize: file.size,
+                        fileUploadDate: new Date().toISOString(),
+                        lastPulled: new Date().toISOString().split('T')[0] // Auto-mark as pulled
+                    });
+                    
+                    showAlert('✅ File uploaded and synced to cloud!', 'success');
+                } else {
+                    showAlert('File upload requires internet connection', 'danger');
+                }
+                
+                // Clear the input
+                inputElement.value = '';
+                
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                showAlert('❌ Upload failed. Please try again.', 'danger');
+                inputElement.value = '';
+            }
+        }
+
+        // File download functionality
+        function downloadFile(fileUrl, fileName) {
+            try {
+                const link = document.createElement('a');
+                link.href = fileUrl;
+                link.download = fileName;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showAlert('📥 File download started', 'success');
+            } catch (error) {
+                console.error('Error downloading file:', error);
+                showAlert('❌ Download failed. Please try again.', 'danger');
+            }
         }
 
         // Alerts
