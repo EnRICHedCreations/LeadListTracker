@@ -199,6 +199,45 @@
             opacity: 0.8;
         }
 
+        .state-group {
+            margin-bottom: 20px;
+        }
+
+        .state-header {
+            background: linear-gradient(135deg, #4a5568, #2d3748);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .state-header:hover {
+            background: linear-gradient(135deg, #2d3748, #1a202c);
+        }
+
+        .state-header.collapsed {
+            margin-bottom: 5px;
+        }
+
+        .state-counties {
+            padding-left: 10px;
+        }
+
+        .state-counties.collapsed {
+            display: none;
+        }
+
+        .state-stats {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
         .data-sources {
             display: grid;
             gap: 20px;
@@ -392,6 +431,15 @@
             .source-actions {
                 flex-direction: column;
             }
+
+            .state-header {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+
+            .state-stats {
+                font-size: 0.75rem;
+            }
         }
     </style>
 </head>
@@ -430,6 +478,19 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3>Counties</h3>
                     <button class="btn" onclick="openAddCountyModal()">+ Add County</button>
+                </div>
+                
+                <!-- State Filter -->
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <select id="stateFilter" onchange="filterByState()" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                        <option value="">All States</option>
+                    </select>
+                </div>
+                
+                <!-- View Toggle -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn btn-secondary" onclick="toggleView('list')" id="listViewBtn" style="flex: 1; padding: 8px;">📋 List</button>
+                    <button class="btn" onclick="toggleView('states')" id="stateViewBtn" style="flex: 1; padding: 8px;">🗺️ By State</button>
                 </div>
                 
                 <div class="county-list" id="countyList">
@@ -616,6 +677,9 @@
         let dataSources = [];
         let currentCountyId = null;
         let isOnline = true;
+        let currentView = 'list'; // 'list' or 'states'
+        let selectedState = '';
+        let collapsedStates = new Set();
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
@@ -743,14 +807,37 @@
         }
 
         function loadCounties() {
+            populateStateFilter();
+            
+            if (currentView === 'states') {
+                loadCountiesByState();
+            } else {
+                loadCountiesList();
+            }
+        }
+
+        function populateStateFilter() {
+            const stateFilter = document.getElementById('stateFilter');
+            const states = [...new Set(counties.map(c => c.state))].sort();
+            
+            stateFilter.innerHTML = '<option value="">All States</option>' + 
+                states.map(state => `<option value="${state}" ${selectedState === state ? 'selected' : ''}>${state}</option>`).join('');
+        }
+
+        function loadCountiesList() {
             const countyList = document.getElementById('countyList');
             
             if (counties.length === 0) {
                 countyList.innerHTML = '<div style="text-align: center; color: #718096; padding: 20px;">No counties added yet</div>';
                 return;
             }
+
+            let filteredCounties = counties;
+            if (selectedState) {
+                filteredCounties = counties.filter(c => c.state === selectedState);
+            }
             
-            countyList.innerHTML = counties.map(county => {
+            countyList.innerHTML = filteredCounties.map(county => {
                 const sources = dataSources.filter(s => s.countyId === county.id);
                 const overdue = sources.filter(s => isOverdue(s)).length;
                 const dueSoon = sources.filter(s => isDueSoon(s)).length;
@@ -768,6 +855,79 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        function loadCountiesByState() {
+            const countyList = document.getElementById('countyList');
+            
+            if (counties.length === 0) {
+                countyList.innerHTML = '<div style="text-align: center; color: #718096; padding: 20px;">No counties added yet</div>';
+                return;
+            }
+
+            // Group counties by state
+            const countiesByState = {};
+            counties.forEach(county => {
+                if (!countiesByState[county.state]) {
+                    countiesByState[county.state] = [];
+                }
+                countiesByState[county.state].push(county);
+            });
+
+            // Filter by selected state if any
+            const statesToShow = selectedState ? 
+                {[selectedState]: countiesByState[selectedState] || []} : 
+                countiesByState;
+
+            const stateGroups = Object.keys(statesToShow).sort().map(state => {
+                const stateCounties = statesToShow[state];
+                const totalSources = stateCounties.reduce((total, county) => {
+                    return total + dataSources.filter(s => s.countyId === county.id).length;
+                }, 0);
+                
+                const totalOverdue = stateCounties.reduce((total, county) => {
+                    const sources = dataSources.filter(s => s.countyId === county.id);
+                    return total + sources.filter(s => isOverdue(s)).length;
+                }, 0);
+
+                const isCollapsed = collapsedStates.has(state);
+                
+                const countiesHtml = stateCounties.map(county => {
+                    const sources = dataSources.filter(s => s.countyId === county.id);
+                    const overdue = sources.filter(s => isOverdue(s)).length;
+                    const dueSoon = sources.filter(s => isDueSoon(s)).length;
+                    
+                    return `
+                        <div class="county-item ${currentCountyId === county.id ? 'active' : ''}" 
+                             onclick="selectCounty('${county.id}')">
+                            <div class="county-name">${county.name}</div>
+                            <div class="county-stats">
+                                ${sources.length} sources • 
+                                ${overdue > 0 ? `${overdue} overdue` : ''}
+                                ${dueSoon > 0 ? `${dueSoon} due soon` : ''}
+                                ${overdue === 0 && dueSoon === 0 ? 'All current' : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="state-group">
+                        <div class="state-header ${isCollapsed ? 'collapsed' : ''}" onclick="toggleState('${state}')">
+                            <div>
+                                <div>${state}</div>
+                                <div class="state-stats">${stateCounties.length} counties • ${totalSources} sources ${totalOverdue > 0 ? `• ${totalOverdue} overdue` : ''}</div>
+                            </div>
+                            <div>${isCollapsed ? '▶' : '▼'}</div>
+                        </div>
+                        <div class="state-counties ${isCollapsed ? 'collapsed' : ''}">
+                            ${countiesHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            countyList.innerHTML = stateGroups;
         }
 
         function selectCounty(countyId) {
@@ -989,6 +1149,31 @@
                 'pdf': '📕'
             };
             return icons[extension] || '📄';
+        }
+
+        // View and filter controls
+        function toggleView(view) {
+            currentView = view;
+            
+            // Update button styles
+            document.getElementById('listViewBtn').className = view === 'list' ? 'btn' : 'btn btn-secondary';
+            document.getElementById('stateViewBtn').className = view === 'states' ? 'btn' : 'btn btn-secondary';
+            
+            loadCounties();
+        }
+
+        function filterByState() {
+            selectedState = document.getElementById('stateFilter').value;
+            loadCounties();
+        }
+
+        function toggleState(state) {
+            if (collapsedStates.has(state)) {
+                collapsedStates.delete(state);
+            } else {
+                collapsedStates.add(state);
+            }
+            loadCounties();
         }
 
         // Actions
